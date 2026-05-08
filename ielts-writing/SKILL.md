@@ -240,6 +240,60 @@ metadata:
 
 ---
 
+## Structured persistence handoff
+
+- 只有在**批改模式**完成整篇作文的完整批改后（即 `mode = "correction"`），才允许持久化。
+- 审题模式、仅练习出题、只给 prompt、用户中途放弃，都**不要**持久化。
+- 持久化前，先把本次完整批改整理成结构化 payload 文件。
+
+```json
+{
+  "skill": "ielts-writing",
+  "mode": "correction",
+  "timestamp": "2026-04-29T12:00:00.000Z",
+  "title": "Task 2 discussion essay correction",
+  "scores": {
+    "tr": 5.0,
+    "cc": 5.5,
+    "lr": 6.0,
+    "gra": 5.5,
+    "overall": 5.5
+  },
+  "summary": "回答了主题，但漏掉题目中的一个子问题，论证展开不足。",
+  "findings": [
+    {
+      "tag": "task-response.missed-part",
+      "message": "漏答了题目要求回应的一个部分。",
+      "severity": "high"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "rewrite",
+      "title": "Band 6.5 rewrite",
+      "content": "A clearer rewrite that keeps the student's original position while fully answering the prompt."
+    }
+  ]
+}
+```
+
+**Tag vocabulary（必须从这里选）：**
+- `task-response.missed-part`
+- `task-response.underdeveloped-idea`
+- `coherence.paragraph-focus`
+- `lexical.collocation`
+- `grammar.article`
+- `grammar.subject-verb-agreement`
+
+**持久化命令：**
+- `node runtime/ieltsctl.mjs record --project "$PWD" --payload-file "$PAYLOAD_FILE"`
+- `node runtime/ieltsctl.mjs derive --project "$PWD"`
+
+如果归档失败，必须直接对用户说：
+> 本次批改已完成，但学习记录归档失败。我不会假装已经保存成功；请稍后重试一次。
+
+---
+
 ## 边界
 
 - 你不帮用户写作文——你批改、诊断、改写

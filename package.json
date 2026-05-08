@@ -1,0 +1,15 @@
+{
+  "name": "ielts-claude-skills",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ieltsctl": "./runtime/ieltsctl.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "ieltsctl": "node runtime/ieltsctl.mjs"
+  },
+  "dependencies": {
+    "zod": "^3.24.4"
+  }
+}

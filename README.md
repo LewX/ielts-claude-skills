@@ -61,6 +61,16 @@ cp -r ielts ielts-writing ielts-reading ielts-speaking ~/.claude/skills/
 
 装完之后重启 Claude Code，输入 `/ielts` 就能用。
 
+### 方法三：GitHub Copilot CLI（一行安装）
+
+**前提：** 需要先安装 [GitHub Copilot CLI](https://githubnext.com/projects/copilot-cli)。
+
+```bash
+copilot plugin install LewX/ielts-claude-skills
+```
+
+安装后重启 Copilot CLI，直接说「我要备考雅思」或「IELTS」即可触发 skill。
+
 ---
 
 ## 怎么用
@@ -85,7 +95,7 @@ AI：
 - 给提分优先级
 ```
 
-### 场景 3：分析阅读错题
+### 场景 3A：分析阅读错题
 
 ```
 你：/ielts-reading
@@ -94,6 +104,21 @@ AI：
 - 逐题拆解错因
 - 提取同义替换词表
 - T/F/NG 逻辑分析
+```
+
+### 场景 3B：让阅读 skill 原创出题
+
+```
+你：/ielts-reading
+   "请按 IELTS General Training Band 8 难度，给我 1 篇 Passage + 10 题原创仿真材料"
+AI：
+- 声明生效配置（用户已指定的变量直接采用，未指定的套用默认值），直接生成——不发起额外确认
+- 给出一篇 GT 仿真 Passage
+- 配套 10 道正式风格题目
+- **第一轮回复不含答案和解析**；提交答案后才输出答案 Key 与逐题讲解
+- 用户提交答案后，AI 进入逐题详细分析模式
+- 对支持的环境，`ielts-reading` 默认优先启用 UI 做题页
+- 如果环境不支持浏览器拉起，再退回 CLI
 ```
 
 ### 场景 4：准备口语素材
@@ -123,6 +148,19 @@ ielts-claude-skills/
 
 每个 skill 就是一个文件夹 + 一个 `SKILL.md`。Claude Code 通过 `name` 字段识别和触发。
 
+## v3.0 Core Phase 1 运行方式
+
+Phase 1 不做 Dashboard，先做项目内持久化和学习摘要。
+
+运行时命令：
+
+```bash
+npm install
+node runtime/ieltsctl.mjs init --project "$PWD"
+```
+
+这样会在当前项目下创建 `.ielts/`，后续 `/ielts` 和 `/ielts-writing` 可以读写这份学习记录。
+
 ---
 
 ## 怎么改
@@ -149,7 +187,7 @@ ielts-claude-skills/
 | | v1.0（开源免费） | v3.0（付费完整版） |
 |--|-----------------|-------------------|
 | Skill 数量 | **4 个**（写作 / 阅读 / 口语 + 路由） | **8 个**（+ 诊断 / 听力 / 词汇 / Dashboard） |
-| 数据持久化 | ❌ 每次对话独立 | ✅ `~/.ielts/` 跨会话记忆 |
+| 数据持久化 | ❌ 每次对话独立 | ✅ 项目内 `.ielts/` 跨环境同步 |
 | 批改历史 | ❌ | ✅ 每篇作文自动归档，带评分 |
 | 进度追踪 | ❌ | ✅ 自动统计四科趋势 |
 | 可视化 Dashboard | ❌ | ✅ 本地 React 网页：趋势图 / 雷达图 / 错题热力图 |
@@ -168,7 +206,7 @@ ielts-claude-skills/
 你（Claude Code 里）
   ↓ 一句"批改我这篇作文"
 8 个 Skill 协同工作
-  ↓ 写入 ~/.ielts/（你电脑本地，没有云端）
+  ↓ 当前项目的 .ielts/（跟着项目走，可提交到 git）
 本地 Dashboard（localhost:5173）
   ↓ 浏览器打开看
 趋势图 / 雷达图 / 错题分布热力图

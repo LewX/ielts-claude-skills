@@ -1,0 +1,17 @@
+{
+  "name": "ielts-claude-skills",
+  "description": "雅思备考 AI 教练：写作批改 / 阅读分析 / 口语素材 / 路由教练",
+  "version": "1.0.3",
+  "author": {
+    "name": "LewX"
+  },
+  "repository": "https://github.com/LewX/ielts-claude-skills",
+  "license": "MIT",
+  "keywords": ["ielts", "english", "exam", "skills"],
+  "skills": [
+    "./ielts",
+    "./ielts-writing",
+    "./ielts-reading",
+    "./ielts-speaking"
+  ]
+}

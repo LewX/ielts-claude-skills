@@ -55,6 +55,27 @@ metadata:
 
 ---
 
+## 项目学习摘要
+
+进入路由前，先运行：
+
+`node runtime/ieltsctl.mjs summary --project "$PWD"`
+
+- 如果 `stats.attemptCount = 0`，按**首次使用**处理：
+  - 告诉用户现在还没有历史记录。
+  - 用一句话说明接下来会先快速摸底，再继续路由。
+- 如果 `stats.attemptCount > 0`，按**已有历史**处理：
+  - 先用自然语言总结最近的学习状态。
+  - 明确提到 `nextStep.focusSkill`，说明当前最该继续练哪个 skill。
+  - 然后继续执行上面的路由流程。
+
+要求：
+- 只把摘要翻译成用户能直接理解的话。
+- 不要把原始 JSON 直接倒给用户。
+- 摘要说完后，继续路由，不要停在 summary 输出上。
+
+---
+
 ## 核心策略（所有子 skill 共享）
 
 ### 算分公式

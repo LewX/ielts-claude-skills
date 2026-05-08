@@ -2,7 +2,7 @@
 name: ielts-reading
 description: |
   雅思阅读精读教练。同义替换提取 + T/F/NG 逻辑拆解 + 段落结构分析 + 错题诊断。
-  触发方式：/ielts-reading、「分析阅读」「这道为什么错」「同义替换」「阅读训练」
+  触发方式：/ielts-reading、「分析阅读」「这道为什么错」「同义替换」「阅读训练」「出题」「给我一套阅读题」「生成阅读材料」
 metadata:
   version: 1.0.0
 ---
@@ -25,13 +25,14 @@ metadata:
 
 ---
 
-## 三种模式
+## 模式
 
 | 模式 | 触发 | 做什么 |
 |------|------|--------|
 | **错题分析** | 用户给了文章 + 题目 + 自己的答案 | 逐题拆解错因 + 同义替换提取 |
 | **精读训练** | 用户给了文章 + 题目（没做过） | 引导做题 + 做完后分析 |
 | **专项训练** | 用户说"练T/F/NG"或"练Matching" | 针对特定题型训练 |
+| **原创材料出题模式** | 用户要你出一套符合 IELTS 要求的阅读材料 | 先生成原创仿真 Passage + 10 题；用户提交答案后再给答案与解析 |
 
 ---
 
@@ -172,6 +173,67 @@ metadata:
 
 ---
 
+## 原创材料出题模式
+
+用户说"请你帮我收集阅读材料并出题"、"给我一套阅读题"、"按雅思要求出题"时（"收集材料"指 AI 生成原创仿真内容，**不是**抓取或转载受版权保护的真实语料）：
+
+1. 读取用户已明确指定的变量；未提及的项套用以下默认值：
+   - 版本（Academic / General Training）：默认 IELTS General Training
+   - 难度：默认 Band 8
+   - 套题规模：默认 1 篇 Passage + 10 题
+   - 材料形式：默认原创仿真材料
+
+   在回复开头用一行列出生效配置，然后直接生成——**不要发起额外确认**。
+2. 只生成 IELTS 常见题型。默认组合：
+   - True/False/Not Given x4
+   - Sentence Completion x3
+   - Multiple Choice x3
+3. 文章体裁优先 GT 常见实用文本：
+   - guide
+   - notice pack
+   - staff handbook excerpt
+   - community information sheet
+4. 输出顺序固定：
+   - Passage
+   - Questions 1-10
+   - 作答说明
+
+   > **注意：** 这一轮只输出题目；答案 Key、每题定位与推导、同义替换词表等内容**禁止**在出题阶段输出，须等用户提交答案后再补充。
+5. 质量约束：
+   - Passage 长度控制在 650–850 英文单词
+   - 题目顺序必须与 Passage 段落顺序一致
+   - 每道题都必须能在原文定位
+   - 不靠冷知识
+   - 不自创题型
+   - Sentence Completion 必须可唯一作答
+   - T/F/NG 必须严格区分 FALSE 和 NOT GIVEN
+   - T/F/NG 至少 2 题专门测 FALSE 与 NOT GIVEN 的边界（即答案为 FALSE 或 NOT GIVEN 的题各至少 1 题）
+   - 题目措辞不能直接抄原文句子（必须改写，体现同义替换）
+   - Multiple Choice 的干扰项必须对应真实误判，不是乱编
+6. 用户提交答案后，再补充输出：
+   - 答案 Key
+   - 每题定位与推导
+   - 同义替换词表
+
+### UI 优先训练路由
+
+- 对"skill 自己生成原创材料并做题"的请求，默认优先启用 UI 做题页。
+- 第一版只接受原创材料训练链启用 UI；用户粘贴外部文章时，继续走终端分析模式。
+- UI 必须复用项目内持久化的共享 UI shell，不允许每次临时生成不同样式。
+
+#### 启动步骤
+
+1. 生成 Passage 与题目后，将 session 数据写入 `$SESSION_FILE`（JSON，必须匹配当前 reading UI runtime contract；至少包含 `view`，以及该 `view` 所需的数据）。
+2. 执行以下命令启动本地做题页：
+   ```
+   node runtime/ieltsctl.mjs launch-reading-ui --project "$PWD" --session-file "$SESSION_FILE"
+   ```
+3. 若命令退出码为 0，先解析 stdout JSON；只有其中 `"ok": true` 且存在本地 `url` 时，才算 UI 启动成功。
+4. 必须从 stdout JSON 读取 `url`，把该 URL 原样告诉用户，由用户在浏览器中完成作答。
+5. 若命令失败（退出码非 0）或运行时不可用，**不声称 UI 已启动**，直接继续终端训练流程。
+
+---
+
 ## 专项训练模式
 
 用户说"我要练 T/F/NG"或"练 Matching Headings"：
@@ -226,3 +288,4 @@ metadata:
 - 你不做规划 → `/ielts`
 - 你不生成口语素材 → `/ielts-speaking`
 - 精读训练不直接给答案——引导式教学
+- 原创材料出题模式：第一轮只输出 Passage 与题目，答案 Key 和讲解须等用户提交答案后才输出
